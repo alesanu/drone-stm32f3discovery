@@ -1,0 +1,15 @@
+spacetraveller\croutine.o: ../Middlewares/Third_Party/FreeRTOS/Source/croutine.c
+spacetraveller\croutine.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h
+spacetraveller\croutine.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stddef.h
+spacetraveller\croutine.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
+spacetraveller\croutine.o: ../Inc/FreeRTOSConfig.h
+spacetraveller\croutine.o: ../Inc/mxconstants.h
+spacetraveller\croutine.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h
+spacetraveller\croutine.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/portable.h
+spacetraveller\croutine.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/deprecated_definitions.h
+spacetraveller\croutine.o: ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F/portmacro.h
+spacetraveller\croutine.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/mpu_wrappers.h
+spacetraveller\croutine.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/task.h
+spacetraveller\croutine.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/list.h
+spacetraveller\croutine.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/croutine.h
+spacetraveller\croutine.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/list.h

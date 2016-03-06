@@ -1,0 +1,13 @@
+spacetraveller\port.o: ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F/port.c
+spacetraveller\port.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h
+spacetraveller\port.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stddef.h
+spacetraveller\port.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
+spacetraveller\port.o: ../Inc/FreeRTOSConfig.h
+spacetraveller\port.o: ../Inc/mxconstants.h
+spacetraveller\port.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h
+spacetraveller\port.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/portable.h
+spacetraveller\port.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/deprecated_definitions.h
+spacetraveller\port.o: ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F/portmacro.h
+spacetraveller\port.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/mpu_wrappers.h
+spacetraveller\port.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/task.h
+spacetraveller\port.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/list.h

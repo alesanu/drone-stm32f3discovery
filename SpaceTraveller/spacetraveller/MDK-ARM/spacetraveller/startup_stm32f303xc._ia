@@ -1,0 +1,6 @@
+--cpu Cortex-M4.fp --pd "__EVAL SETA 1" -g --apcs=interwork --pd "__MICROLIB SETA 1" -I..\Inc
+-I C:\Users\Aso\Desktop\Quadcopter\projects\SpaceTraveller\spacetraveller\MDK-ARM\RTE
+-I C:\Keil_v5\ARM\PACK\ARM\CMSIS\4.5.0\CMSIS\Include
+-I C:\Keil_v5\ARM\PACK\Keil\STM32F3xx_DFP\1.3.0\Device\Include
+--pd "__UVISION_VERSION SETA 517" --pd "_RTE_ SETA 1" --pd "STM32F303xC SETA 1"
+--list startup_stm32f303xc.lst --xref -o spacetraveller\startup_stm32f303xc.o --depend spacetraveller\startup_stm32f303xc.d "startup_stm32f303xc.s"

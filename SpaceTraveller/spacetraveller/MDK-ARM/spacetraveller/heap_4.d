@@ -1,0 +1,14 @@
+spacetraveller\heap_4.o: ../Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.c
+spacetraveller\heap_4.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h
+spacetraveller\heap_4.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h
+spacetraveller\heap_4.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stddef.h
+spacetraveller\heap_4.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
+spacetraveller\heap_4.o: ../Inc/FreeRTOSConfig.h
+spacetraveller\heap_4.o: ../Inc/mxconstants.h
+spacetraveller\heap_4.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h
+spacetraveller\heap_4.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/portable.h
+spacetraveller\heap_4.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/deprecated_definitions.h
+spacetraveller\heap_4.o: ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F/portmacro.h
+spacetraveller\heap_4.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/mpu_wrappers.h
+spacetraveller\heap_4.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/task.h
+spacetraveller\heap_4.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/list.h
