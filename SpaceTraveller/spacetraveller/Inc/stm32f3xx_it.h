@@ -48,6 +48,7 @@
 void SysTick_Handler(void);
 void USB_LP_CAN_RX0_IRQHandler(void);
 void TIM1_UP_TIM16_IRQHandler(void);
+void EXTI0_IRQHandler(void);
 
 #ifdef __cplusplus
 }
