@@ -728,6 +728,8 @@ uint8_t COMPASSACCELERO_IO_Read(uint16_t DeviceAddr, uint8_t RegisterAddr)
   /* call I2Cx Read data bus function */   
   return I2Cx_ReadData(DeviceAddr, RegisterAddr);
 }
+
+
 #endif /* HAL_I2C_MODULE_ENABLED */
 
 

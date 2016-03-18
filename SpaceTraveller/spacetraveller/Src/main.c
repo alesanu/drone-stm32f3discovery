@@ -16,10 +16,15 @@
 /* USER CODE BEGIN Includes */
 
 /* USER CODE END Includes */
-
+#define PI                         (float)     3.14159265f
 /* Private variables ---------------------------------------------------------*/
 __IO uint8_t UserPressButton = 0;
-int16_t buffer[3] = {0};
+int16_t AccBuffer[3] = {0};
+float MagBuffer[3] = {0.0f}, Buffer[3] = {0.0f};
+float fNormAcc,fSinRoll,fCosRoll,fSinPitch,fCosPitch = 0.0f, RollAng = 0.0f, PitchAng = 0.0f;
+float fTiltedX,fTiltedY = 0.0f;
+__IO uint8_t DataReady = 0; 
+__IO float HeadingValue = 0.0f;  
 int16_t xval, yval = 0x00;
 int light = 10;
 TIM_HandleTypeDef htim1;
@@ -39,6 +44,8 @@ static void Transmit_Thread(void const *argument);
 static void PWM_Thread(void const *argument);
 void SystemClock_Config(void);
 void MX_FREERTOS_Init(void);
+void MAGNET_Init(void);
+void MAGNET_MagicReadData(float* pfData);
 static void MX_TIM1_Init(void);
 static void MX_TIM3_Init(void);
 /* USER CODE BEGIN PFP */
@@ -79,15 +86,25 @@ int main(void)
  // BSP_LED_Init(LED8);
   BSP_LED_Init(LED6);
 	BSP_ACCELERO_Init();
-	COMPASSACCELERO_IO_Init();
-	COMPASSACCELERO_IO_ITConfig();
+	MAGNET_Init();
 	
   /* USER CODE BEGIN 2 */
 	MX_TIM1_Init();
 	MX_TIM3_Init();
 	HAL_TIM_PWM_Start(&htim1,TIM_CHANNEL_4);
   /* USER CODE END 2 */
+	
+	HAL_TIM_PWM_Start(&htim3,TIM_CHANNEL_1);
+	HAL_TIM_PWM_Start(&htim3,TIM_CHANNEL_2);
+	HAL_TIM_PWM_Start(&htim3,TIM_CHANNEL_3);
+	HAL_TIM_PWM_Start(&htim3,TIM_CHANNEL_4);
+	
+	
   TIM1->CCR4 = 0;
+	TIM3->CCR1 = 500;
+	TIM3->CCR2 = 500;
+	TIM3->CCR3 = 500;
+	TIM3->CCR4 = 500;
   /* Call init function for freertos objects (in freertos.c) */
   MX_FREERTOS_Init();
 	
@@ -172,64 +189,198 @@ static void Accelero_Thread(void const *argument)
 {
   uint32_t count = 0;
   (void) argument;
-
+ 
   for (;;)
   {
-				/*Something*/
-	BSP_ACCELERO_GetXYZ(buffer);
+ 
+		while(DataReady !=0x05)
+      {}
+		DataReady = 0x00;
+    MAGNET_MagicReadData(MagBuffer);
+		BSP_ACCELERO_GetXYZ(AccBuffer);
+      
+      for(int i=0;i<3;i++)
+        AccBuffer[i] /= 100.0f;
+      
+      fNormAcc = sqrt((double)(AccBuffer[0]*AccBuffer[0])+(AccBuffer[1]*AccBuffer[1])+(AccBuffer[2]*AccBuffer[2]));
+      
+      fSinRoll = -AccBuffer[1]/fNormAcc;
+      fCosRoll = sqrt(1.0-(fSinRoll * fSinRoll));
+      fSinPitch = AccBuffer[0]/fNormAcc;
+      fCosPitch = sqrt(1.0-(fSinPitch * fSinPitch));
+     if ( fSinRoll >0)
+     {
+       if (fCosRoll>0)
+       {
+         RollAng = acos(fCosRoll)*180/PI;
+       }
+       else
+       {
+         RollAng = acos(fCosRoll)*180/PI + 180;
+       }
+     }
+     else
+     {
+       if (fCosRoll>0)
+       {
+         RollAng = acos(fCosRoll)*180/PI + 360;
+       }
+       else
+       {
+         RollAng = acos(fCosRoll)*180/PI + 180;
+       }
+     }
+     
+      if ( fSinPitch >0)
+     {
+       if (fCosPitch>0)
+       {
+            PitchAng = acos(fCosPitch)*180/PI;
+       }
+       else
+       {
+          PitchAng = acos(fCosPitch)*180/PI + 180;
+       }
+     }
+     else
+     {
+       if (fCosPitch>0)
+       {
+            PitchAng = acos(fCosPitch)*180/PI + 360;
+       }
+       else
+       {
+          PitchAng = acos(fCosPitch)*180/PI + 180;
+       }
+     }
+
+      if (RollAng >=360)
+      {
+        RollAng = RollAng - 360;
+      }
+      
+      if (PitchAng >=360)
+      {
+        PitchAng = PitchAng - 360;
+      }
+      
+      fTiltedX = MagBuffer[0]*fCosPitch+MagBuffer[2]*fSinPitch;
+      fTiltedY = MagBuffer[0]*fSinRoll*fSinPitch+MagBuffer[1]*fCosRoll-MagBuffer[1]*fSinRoll*fCosPitch;
+      
+      HeadingValue = (float) ((atan2f((float)fTiltedY,(float)fTiltedX))*180)/PI;
+ 
+      if (HeadingValue < 0)
+      {
+        HeadingValue = HeadingValue + 360;    
+      }
+      
+      if ((RollAng <= 40.0f) && (PitchAng <= 40.0f))
+      {
+        if (((HeadingValue < 25.0f)&&(HeadingValue >= 0.0f))||((HeadingValue >=340.0f)&&(HeadingValue <= 360.0f)))
+        {
+          BSP_LED_On(LED10);
+          BSP_LED_Off(LED3);
+          BSP_LED_Off(LED6);
+          BSP_LED_Off(LED7);
+          BSP_LED_Off(LED4);
+          BSP_LED_Off(LED8);
+          BSP_LED_Off(LED9);
+          BSP_LED_Off(LED5);
+        }
+        else  if ((HeadingValue <70.0f)&&(HeadingValue >= 25.0f))
+        {
+          BSP_LED_On(LED9);
+          BSP_LED_Off(LED6);
+          BSP_LED_Off(LED10);
+          BSP_LED_Off(LED3);
+          BSP_LED_Off(LED8);
+          BSP_LED_Off(LED5);
+          BSP_LED_Off(LED4);
+          BSP_LED_Off(LED7);
+        } 
+        else  if ((HeadingValue < 115.0f)&&(HeadingValue >= 70.0f))
+        {
+          BSP_LED_On(LED7);
+          BSP_LED_Off(LED3);
+          BSP_LED_Off(LED4);
+          BSP_LED_Off(LED9);
+          BSP_LED_Off(LED10);
+          BSP_LED_Off(LED8);
+          BSP_LED_Off(LED6);
+          BSP_LED_Off(LED5);
+        }
+        else  if ((HeadingValue <160.0f)&&(HeadingValue >= 115.0f))
+        {
+          BSP_LED_On(LED5);
+          BSP_LED_Off(LED6);
+          BSP_LED_Off(LED10);
+          BSP_LED_Off(LED8);
+          BSP_LED_Off(LED9);
+          BSP_LED_Off(LED7);
+          BSP_LED_Off(LED4);
+          BSP_LED_Off(LED3);
+        } 
+        else  if ((HeadingValue <205.0f)&&(HeadingValue >= 160.0f))
+        {
+          BSP_LED_On(LED3);
+          BSP_LED_Off(LED6);
+          BSP_LED_Off(LED4);
+          BSP_LED_Off(LED8);
+          BSP_LED_Off(LED9);
+          BSP_LED_Off(LED5);
+          BSP_LED_Off(LED10);
+          BSP_LED_Off(LED7);
+        } 
+        else  if ((HeadingValue <250.0f)&&(HeadingValue >= 205.0f))
+        {
+          BSP_LED_On(LED4);
+          BSP_LED_Off(LED6);
+          BSP_LED_Off(LED10);
+          BSP_LED_Off(LED8);
+          BSP_LED_Off(LED9);
+          BSP_LED_Off(LED5);
+          BSP_LED_Off(LED3);
+          BSP_LED_Off(LED7);
+        } 
+        else  if ((HeadingValue < 295.0f)&&(HeadingValue >= 250.0f))
+        {
+          BSP_LED_On(LED6);
+          BSP_LED_Off(LED9);
+          BSP_LED_Off(LED10);
+          BSP_LED_Off(LED8);
+          BSP_LED_Off(LED3);
+          BSP_LED_Off(LED5);
+          BSP_LED_Off(LED4);
+          BSP_LED_Off(LED7);
+        }        
+        else  if ((HeadingValue < 340.0f)&&(HeadingValue >= 295.0f))
+        {
+          BSP_LED_On(LED8);
+          BSP_LED_Off(LED6);
+          BSP_LED_Off(LED10);
+          BSP_LED_Off(LED7);
+          BSP_LED_Off(LED9);
+          BSP_LED_Off(LED3);
+          BSP_LED_Off(LED4);
+          BSP_LED_Off(LED5);
+        }
+      }
 		
-  /* Update autoreload and capture compare registers value*/
-  xval = buffer[0];
-  yval = buffer[1];
-  
-
-		
-  if((ABS(xval))>(ABS(yval)))
-  {
-    if(xval > ThresholdHigh)
-    { 
-      /* LED10 On */
-      BSP_LED_On(LED3);
-      osDelay(10);
+      else
+      {
+        /* Toggle All LEDs */
+        BSP_LED_Toggle(LED7);
+        BSP_LED_Toggle(LED6);
+        BSP_LED_Toggle(LED10);
+        BSP_LED_Toggle(LED8);
+        BSP_LED_Toggle(LED9);
+        BSP_LED_Toggle(LED3);
+        BSP_LED_Toggle(LED4);
+        BSP_LED_Toggle(LED5);
+        /* Delay 50ms */
+        osDelay(5);
+      }
     }
-    else if(xval < ThresholdLow)
-    { 
-      /* LED3 On */
-      BSP_LED_On(LED10);
-      osDelay(10);
-    }
-    else
-    { 
-      osDelay(10);
-    }
-  }
-  else
-  {
-    if(yval < ThresholdLow)
-    {
-      /* LED7 On */
-      BSP_LED_On(LED7);
-      osDelay(10);
-    }
-    else if(yval > ThresholdHigh)
-    {
-      /* LED6 On */
-      BSP_LED_On(LED6);
-      osDelay(10);
-    } 
-    else
-  {	    
-      osDelay(10);
-    }
-  } 
-  
-     BSP_LED_Off(LED3);
-     BSP_LED_Off(LED6);
-     BSP_LED_Off(LED7);
-     BSP_LED_Off(LED10);
-
-
-  }
 
   }
 
@@ -357,6 +508,72 @@ void MX_TIM3_Init(void)
 
 }
 
+void MAGNET_Init(void)
+{
+  LACCELERO_InitTypeDef LSM303DLHC_InitStructure;
+  
+  /* Configure MEMS magnetometer main parameters: temp, working mode, full Scale and Data rate */
+  LSM303DLHC_InitStructure.Temperature_Sensor = LSM303DLHC_TEMPSENSOR_DISABLE;
+  LSM303DLHC_InitStructure.MagOutput_DataRate = LSM303DLHC_ODR_30_HZ ;
+  LSM303DLHC_InitStructure.MagFull_Scale = LSM303DLHC_FS_8_1_GA;
+  LSM303DLHC_InitStructure.Working_Mode = LSM303DLHC_CONTINUOS_CONVERSION;
+  LSM303DLHC_MagInit(&LSM303DLHC_InitStructure);
+  
+}
+
+void MAGNET_MagicReadData(float* pfData)
+{
+  static uint8_t buffer[6] = {0};
+  uint8_t CTRLB = 0;
+  uint16_t Magn_Sensitivity_XY = 0, Magn_Sensitivity_Z = 0;
+  uint8_t i =0;
+  CTRLB = COMPASSACCELERO_IO_Read(MAG_I2C_ADDRESS, LSM303DLHC_CRB_REG_M);
+  
+  buffer[0] = COMPASSACCELERO_IO_Read(MAG_I2C_ADDRESS, LSM303DLHC_OUT_X_H_M);
+  buffer[1] = COMPASSACCELERO_IO_Read(MAG_I2C_ADDRESS, LSM303DLHC_OUT_X_L_M);
+  buffer[2] = COMPASSACCELERO_IO_Read(MAG_I2C_ADDRESS, LSM303DLHC_OUT_Y_H_M);
+  buffer[3] = COMPASSACCELERO_IO_Read(MAG_I2C_ADDRESS, LSM303DLHC_OUT_Y_L_M);
+  buffer[4] = COMPASSACCELERO_IO_Read(MAG_I2C_ADDRESS, LSM303DLHC_OUT_Z_H_M);
+  buffer[5] = COMPASSACCELERO_IO_Read(MAG_I2C_ADDRESS, LSM303DLHC_OUT_Z_L_M);
+  /* Switch the sensitivity set in the CRTLB*/
+  switch(CTRLB & 0xE0)
+  {
+  case LSM303DLHC_FS_1_3_GA:
+    Magn_Sensitivity_XY = LSM303DLHC_M_SENSITIVITY_XY_1_3Ga;
+    Magn_Sensitivity_Z = LSM303DLHC_M_SENSITIVITY_Z_1_3Ga;
+    break;
+  case LSM303DLHC_FS_1_9_GA:
+    Magn_Sensitivity_XY = LSM303DLHC_M_SENSITIVITY_XY_1_9Ga;
+    Magn_Sensitivity_Z = LSM303DLHC_M_SENSITIVITY_Z_1_9Ga;
+    break;
+  case LSM303DLHC_FS_2_5_GA:
+    Magn_Sensitivity_XY = LSM303DLHC_M_SENSITIVITY_XY_2_5Ga;
+    Magn_Sensitivity_Z = LSM303DLHC_M_SENSITIVITY_Z_2_5Ga;
+    break;
+  case LSM303DLHC_FS_4_0_GA:
+    Magn_Sensitivity_XY = LSM303DLHC_M_SENSITIVITY_XY_4Ga;
+    Magn_Sensitivity_Z = LSM303DLHC_M_SENSITIVITY_Z_4Ga;
+    break;
+  case LSM303DLHC_FS_4_7_GA:
+    Magn_Sensitivity_XY = LSM303DLHC_M_SENSITIVITY_XY_4_7Ga;
+    Magn_Sensitivity_Z = LSM303DLHC_M_SENSITIVITY_Z_4_7Ga;
+    break;
+  case LSM303DLHC_FS_5_6_GA:
+    Magn_Sensitivity_XY = LSM303DLHC_M_SENSITIVITY_XY_5_6Ga;
+    Magn_Sensitivity_Z = LSM303DLHC_M_SENSITIVITY_Z_5_6Ga;
+    break;
+  case LSM303DLHC_FS_8_1_GA:
+    Magn_Sensitivity_XY = LSM303DLHC_M_SENSITIVITY_XY_8_1Ga;
+    Magn_Sensitivity_Z = LSM303DLHC_M_SENSITIVITY_Z_8_1Ga;
+    break;
+  }
+  
+  for(i=0; i<2; i++)
+  {
+    pfData[i]=(float)((int16_t)(((uint16_t)buffer[2*i] << 8) + buffer[2*i+1])*1000)/Magn_Sensitivity_XY;
+  }
+  pfData[2]=(float)((int16_t)(((uint16_t)buffer[4] << 8) + buffer[5])*1000)/Magn_Sensitivity_Z;
+}
 
 
 #ifdef USE_FULL_ASSERT

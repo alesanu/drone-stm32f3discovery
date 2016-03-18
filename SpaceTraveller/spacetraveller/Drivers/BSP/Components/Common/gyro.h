@@ -78,7 +78,7 @@ typedef struct
   void       (*FilterConfig)(uint8_t);  
   void       (*FilterCmd)(uint8_t);  
   void       (*GetXYZ)(float *);
-}GYRO_DrvTypeDef;
+}GYRO_DrvTypeDef;  
 
 typedef struct
 {
